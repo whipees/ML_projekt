@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 import psutil
 import joblib
+import json
 import pandas as pd
 import threading
 import time
@@ -9,22 +10,34 @@ from datetime import datetime
 
 
 class TelemetryLivePredictor:
-    def __init__(self, root: tk.Tk, model_path: str):
+    def __init__(self, root: tk.Tk, config_path: str):
         self.root = root
-        self.root.title("AI OS Usage Profiler")
-        self.root.geometry("650x450")
-        self.root.configure(bg="#2b2b2b")
-
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.running = True
         self.current_prediction = 1
         self.last_logged_state = 1
         self.metrics_text = "Initializing sensors..."
 
+        self.config = self.load_config(config_path)
+        self.bg_color = self.config.get("ui_theme", {}).get("bg_color", "#2b2b2b")
+        self.active_color = self.config.get("ui_theme", {}).get("active_color", "#00cc00")
+        self.poll_interval = self.config.get("poll_interval_seconds", 1.0)
+
+        self.root.title("AI OS Telemetry Profiler")
+        self.root.geometry("650x450")
+        self.root.configure(bg=self.bg_color)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        model_rel_path = self.config.get("model_path", "model/system_usage_model.pkl")
+        model_full_path = os.path.join(base_dir, model_rel_path)
+
         try:
-            if not os.path.exists(model_path):
-                raise FileNotFoundError(f"Model file {model_path} not found.")
-            self.model = joblib.load(model_path)
+            if not os.path.exists(model_full_path):
+                if os.path.exists(model_rel_path):
+                    model_full_path = model_rel_path
+                else:
+                    raise FileNotFoundError(f"Model file not found at {model_full_path}")
+            self.model = joblib.load(model_full_path)
         except Exception as e:
             raise RuntimeError(f"Failed to load AI model: {e}")
 
@@ -32,7 +45,7 @@ class TelemetryLivePredictor:
             self.root,
             text="Live AI Activity Detection",
             font=("Arial", 18, "bold"),
-            bg="#2b2b2b",
+            bg=self.bg_color,
             fg="white"
         )
         self.title_lbl.pack(pady=20)
@@ -61,7 +74,7 @@ class TelemetryLivePredictor:
             self.root,
             text=self.metrics_text,
             font=("Courier", 11, "bold"),
-            bg="#2b2b2b",
+            bg=self.bg_color,
             fg="#00ffff"
         )
         self.metrics_lbl.pack(side=tk.BOTTOM, pady=20)
@@ -71,12 +84,24 @@ class TelemetryLivePredictor:
 
         self.root.after(100, self.update_ui)
 
+    def load_config(self, path: str) -> dict:
+        try:
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"Config load error, using defaults: {e}")
+        return {}
+
     def log_alert(self, message: str) -> None:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_entry = f"[{timestamp}] ALERT: {message}\n"
 
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        log_path = os.path.join(base_dir, "security_log.txt")
+
         try:
-            with open("security_log.txt", "a", encoding="utf-8") as log_file:
+            with open(log_path, "a", encoding="utf-8") as log_file:
                 log_file.write(log_entry)
             print(log_entry.strip())
         except Exception as e:
@@ -92,7 +117,7 @@ class TelemetryLivePredictor:
 
         while self.running:
             try:
-                time.sleep(1.0)
+                time.sleep(self.poll_interval)
 
                 cpu_p = psutil.cpu_percent(interval=None)
                 ram_p = psutil.virtual_memory().percent
@@ -139,7 +164,7 @@ class TelemetryLivePredictor:
 
         for s_id, panel in self.ui_panels.items():
             if s_id == self.current_prediction:
-                panel.config(bg="#00cc00", fg="black", font=("Arial", 14, "bold"))
+                panel.config(bg=self.active_color, fg="black", font=("Arial", 14, "bold"))
             else:
                 panel.config(bg="#404040", fg="#888888", font=("Arial", 14, "normal"))
 
@@ -153,11 +178,11 @@ class TelemetryLivePredictor:
 
 if __name__ == "__main__":
     try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_file = os.path.join(current_dir, "system_usage_model.pkl")
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        config_file = os.path.join(base_dir, "config.json")
 
         root_window = tk.Tk()
-        app = TelemetryLivePredictor(root_window, model_file)
+        app = TelemetryLivePredictor(root_window, config_file)
         root_window.mainloop()
     except Exception as e:
         print(f"Application crash: {e}")
