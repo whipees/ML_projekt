@@ -1,0 +1,8 @@
+{
+    "model_path": "model/system_usage_model.pkl",
+    "poll_interval_seconds": 1.0,
+    "ui_theme": {
+        "bg_color": "#2b2b2b",
+        "active_color": "#00cc00"
+    }
+}

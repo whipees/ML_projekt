@@ -11,7 +11,7 @@ from datetime import datetime
 class TelemetryLivePredictor:
     def __init__(self, root: tk.Tk, model_path: str):
         self.root = root
-        self.root.title("AI OS Telemetry Profiler (Advanced)")
+        self.root.title("AI OS Usage Profiler")
         self.root.geometry("650x450")
         self.root.configure(bg="#2b2b2b")
 
