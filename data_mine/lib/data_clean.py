@@ -21,13 +21,20 @@ def filter_data(data: List[Dict[str, str]]) -> List[Dict[str, str]]:
     try:
         for row in data:
             try:
-                engine_ccm_str = row.get("objem_motoru", "0.0")
-                engine_ccm_val = float(engine_ccm_str)
+                label_id_str = row.get("label_id", "")
+                network_recv_str = row.get("network_recv_mb", "0.0")
 
-                if engine_ccm_val > 0.0:
-                    filtered_data.append(row)
+                label_id = int(label_id_str)
+                network_recv_mb = float(network_recv_str)
+
+                if label_id == 1 and network_recv_mb > 1.2:
+                    continue
+
+                filtered_data.append(row)
             except ValueError:
+                filtered_data.append(row)
                 continue
+
         return filtered_data
     except Exception as e:
         raise RuntimeError(f"Error filtering data: {e}")
@@ -51,8 +58,8 @@ def save_data(data: List[Dict[str, str]], filepath: str, fieldnames: List[str]) 
 if __name__ == "__main__":
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        input_csv = os.path.join(current_dir, "autoesa_dataset.csv")
-        output_csv = os.path.join(current_dir, "autoesa_cleaned.csv")
+        input_csv = os.path.join(current_dir, "telemetry_dataset.csv")
+        output_csv = os.path.join(current_dir, "performance_dataset_cleaned.csv")
 
         print(f"Loading raw data from {input_csv}...")
         raw_dataset = load_data(input_csv)
@@ -63,9 +70,11 @@ if __name__ == "__main__":
 
         columns = list(raw_dataset[0].keys())
 
-        print("Filtering out records with engine_ccm == 0.0...")
+        print("Filtering out anomalies (label_id == 1 AND network_recv_mb > 1.5)...")
         cleaned_dataset = filter_data(raw_dataset)
         print(f"Remaining clean records: {len(cleaned_dataset)}")
+        removed_count = len(raw_dataset) - len(cleaned_dataset)
+        print(f"Successfully removed {removed_count} anomalous records.")
 
         save_data(cleaned_dataset, output_csv, columns)
         print(f"Cleaned dataset successfully saved to {output_csv}")
