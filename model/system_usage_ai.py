@@ -36,7 +36,7 @@ class TelemetryLivePredictor:
 
         self.ui_panels = {}
         state_config = {
-            1: "[ STATE 1 ]  Klid/Kancelář",
+            1: "[ STATE 1 ]  Klid",
             2: "[ STATE 2 ]  těžká CPU Zátěž",
             3: "[ STATE 3 ]  Síťová zátěž"
         }

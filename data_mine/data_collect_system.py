@@ -4,7 +4,7 @@ import time
 import psutil
 
 
-class SystemTelemetryCollector:
+class SystemUsageCollector:
     def __init__(self, output_file: str):
         self.output_file = output_file
         self.headers = [
@@ -41,7 +41,7 @@ class SystemTelemetryCollector:
             except Exception as e:
                 raise RuntimeError(f"Hardware sensor initialization failed: {e}")
 
-            print(f"Starting hardware telemetry collection for label ID: {label_id}")
+            print(f"Starting hardware usage collection for label ID: {label_id}")
             print(f"Duration: {duration_seconds} seconds. Please perform the requested activity.")
 
             for i in range(duration_seconds):
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         current_dir = os.path.dirname(os.path.abspath(__file__))
         output_csv = os.path.join(current_dir, "telemetry_dataset.csv")
 
-        print("=== OS Telemetry AI Profiler ===")
+        print("=== OS Usage AI Profiler ===")
         print("1 = Klid / Kancelář (Idle, čtení textu, Word)")
         print("2 = Hraní / Náročný program (CPU zátěž, rendering, zipování obří složky)")
         print("3 = Síťová zátěž (Stahování velkého souboru, test rychlosti internetu)")
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         except ValueError:
             raise ValueError("Invalid input. Must be an integer.")
 
-        collector = SystemTelemetryCollector(output_csv)
+        collector = SystemUsageCollector(output_csv)
         collector.collect_data(user_label, user_duration)
 
         print(f"Collection complete. Data saved to {output_csv}")
