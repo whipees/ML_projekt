@@ -22,7 +22,7 @@ class TelemetryLivePredictor:
         self.active_color = self.config.get("ui_theme", {}).get("active_color", "#00cc00")
         self.poll_interval = self.config.get("poll_interval_seconds", 1.0)
 
-        self.root.title("AI OS Telemetry Profiler")
+        self.root.title("AI Predicter")
         self.root.geometry("650x450")
         self.root.configure(bg=self.bg_color)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -52,9 +52,9 @@ class TelemetryLivePredictor:
 
         self.ui_panels = {}
         state_config = {
-            1: "[ STATE 1 ]  Idle / Office Work",
+            1: "[ STATE 1 ]  Idle",
             2: "[ STATE 2 ]  Heavy CPU Load / Rendering",
-            3: "[ STATE 3 ]  Network Download / Stream"
+            3: "[ STATE 3 ]  Network Download"
         }
 
         for s_id, text in state_config.items():
